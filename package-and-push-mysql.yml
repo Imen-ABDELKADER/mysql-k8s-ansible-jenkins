@@ -1,0 +1,16 @@
+- name: Package and push MySQL Helm chart to Nexus
+  hosts: localhost
+  tasks:
+    - name: Helm package chart
+      ansible.builtin.command:
+        cmd: helm package .
+      args:
+        chdir: "./mysql_helm"
+
+    - name: Upload chart to Nexus with curl
+      ansible.builtin.command: >
+        curl -u helm:Fss@2024
+        --upload-file mysql-grp8-0.3.0.tgz
+        http://10.110.10.189:8081/repository/HelmRepo/
+      args:
+        chdir: "./mysql_helm"

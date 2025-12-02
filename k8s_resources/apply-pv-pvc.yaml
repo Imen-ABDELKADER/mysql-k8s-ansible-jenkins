@@ -1,0 +1,22 @@
+- name: Apply PV and PVC for MySQL
+  hosts: controlplane
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: Copy PV and PVC files to remote
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/{{ item }}"
+        dest: /home/vagrant/{{ item }}
+        owner: vagrant
+        mode: '0644'
+      loop:
+        - pv-mysql.yaml
+        - pvc-mysql.yaml
+
+    - name: Apply PV
+      ansible.builtin.command:
+        cmd: kubectl apply -f /home/vagrant/pv-mysql.yaml
+
+    - name: Apply PVC
+      ansible.builtin.command:
+        cmd: kubectl apply -f /home/vagrant/pvc-mysql.yaml

@@ -1,0 +1,43 @@
+- name: Deploy MySQL from Helm on Kubernetes
+  hosts: controlplane
+  become: yes
+  gather_facts: false 
+  tasks:
+    - name: Ensure Helm values file is copied to remote
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../mysql_helm/values.yaml"
+        dest: /home/vagrant/mysql-values.yaml
+        owner: vagrant
+        mode: '0644'
+
+    - name: Add Nexus Helm repository
+      ansible.builtin.command:
+        cmd: >
+          helm repo add nexus http://10.110.10.189:8081/repository/HelmRepo/
+          --username helm --password Fss@2024
+      args:
+        creates: /home/vagrant/.cache/helm/repository/nexus-index.yaml
+
+    - name: Update Helm repos
+      ansible.builtin.command:
+        cmd: helm repo update
+
+    - name: Install or upgrade MySQL chart
+      ansible.builtin.command:
+        cmd: >
+          helm upgrade -i mysql nexus/mysql-grp8
+          --version 0.3.0
+          -f /home/vagrant/mysql-values.yaml
+          --force
+    - name: Launch temporary MySQL client pod to execute commands
+      ansible.builtin.command: >
+        kubectl run mysql-client --image=mysql:5.7.44 --namespace=mysql --restart=Never --rm -i --tty -- 
+        /bin/bash -c "mysql -h mysql-service -uroot -pgr8pass -e \"CREATE USER IF NOT EXISTS '{{ db_user }}'@'%' IDENTIFIED BY '{{ db_password }}'; CREATE DATABASE IF NOT EXISTS {{ db_name }}; GRANT ALL PRIVILEGES ON {{ db_name }}.* TO '{{ db_user }}'@'%'; FLUSH PRIVILEGES;\""
+      register: mysql_result
+      changed_when: mysql_result.rc == 0
+      failed_when: mysql_result.rc != 0
+
+    - name: Debug MySQL command output
+      ansible.builtin.debug:
+        msg: "{{ mysql_result.stdout_lines }}"
+      when: mysql_result.rc == 0

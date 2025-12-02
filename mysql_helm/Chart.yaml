@@ -1,0 +1,4 @@
+apiVersion: v2
+name: mysql-grp8
+version: 0.3.0
+description: Helm chart to deploy MySQL database with NFS storage
