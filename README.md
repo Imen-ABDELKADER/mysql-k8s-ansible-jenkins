@@ -1,6 +1,6 @@
 # MySQL on Kubernetes – Fully Automated Deployment with Ansible & Jenkins
 
-**DevOps **
+**DevOps**
 
 End-to-end automation that provisions and deploys a production-ready MySQL database on a Kubernetes cluster using Infrastructure as Code (IaC) and CI/CD best practices.
 
